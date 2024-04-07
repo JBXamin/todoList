@@ -1,0 +1,18 @@
+body{
+    background-color: black;
+}
+.box{
+    height: 200px;
+    width: 500px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border-radius: 60px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+pre{
+    font-size: 15px;
+}

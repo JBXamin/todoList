@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo-List.com</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Set background color */
+        }
+
+        .navbar {
+            background-color: #6a0dad; /* Set navbar background color */
+        }
+
+        .navbar-brand {
+            color: #fff; /* Set navbar text color */
+        }
+
+        .container-box {
+            margin-top: 50px;
+        }
+
+        .task-box,
+        .event-box {
+            max-width: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .task-title,
+        .event-title {
+            color: #6a0dad;
+            font-weight: bold;
+        }
+
+        .task-date,
+        .event-date {
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .delete-btn {
+            color: #ff6347;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{url_for('mainPage')}}">ToDo-List.com</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <!-- Add Authorization Button -->
+                        <a class="nav-link" href="{{url_for('authorize')}}">Authorize</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('newTask')}}">Add Task</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('newEvent')}}">Add Event</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Container Box -->
+    <div class="container container-box">
+        <div class="row">
+            <!-- Task Box -->
+            <div class="col-md-6">
+                <div class="task-box">
+                    <h2>Tasks</h2>
+                    {% for x in all_tasks %}
+                    <div class="task mb-3">
+                        <a href="{{url_for('showTask', ids=x.id)}}" class="task-title">{{x.title}}</a>
+                        <p class="task-date">{{x.date}}</p>
+                        <a href="{{url_for('delT', task_Id=x.id)}}" class="delete-btn">Delete this Task</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Event Box -->
+            <div class="col-md-6">
+                <div class="event-box">
+                    <h2>Events</h2>
+                    {% for event in all_events %}
+                    <div class="event mb-3">
+                        <a href="{{event.link}}" class="event-title">{{event.title}}</a>
+                        <p class="event-date">{{event.description}}</p>
+                        <br>
+                        <p class="event-date">{{event.date}}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

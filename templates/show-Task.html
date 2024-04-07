@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoSheets</title>
+    <link rel="stylesheet" href="/static/myWeb3.css">
+    <style>
+        /* Custom CSS for enhancing the appearance of the webpage */
+        body {
+            background-color: #f8f9fa; /* Set light mode background color */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif; /* Specify font family */
+            color: #212529; /* Set text color */
+        }
+
+        .box {
+            width: 80%;
+            max-width: 600px; /* Limit box width */
+            margin: 0 auto; /* Center the box horizontally */
+            background-color: #fff; /* Set light mode background color */
+            border-radius: 20px; /* Add border radius */
+            padding: 30px;
+            margin-top: 10vh; /* Adjust top margin */
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1); /* Add box shadow */
+        }
+
+        h1 {
+            text-align: center;
+            color: #6a0dad; /* Set text color */
+            margin-bottom: 30px; /* Add space below heading */
+        }
+
+        form {
+            text-align: left; /* Align form elements to the left */
+            margin-top: 20px; /* Add space above form */
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px; /* Add space between checkbox and label */
+        }
+
+        button[type="submit"] {
+            background-color: #6a0dad; /* Set button background color */
+            color: #fff; /* Set button text color */
+            border: none;
+            padding: 10px 20px; /* Add padding to button */
+            border-radius: 5px; /* Add border radius */
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* Add transition effect */
+        }
+
+        button[type="submit"]:hover {
+            background-color: #540090; /* Change button background color on hover */
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px; /* Add space above link */
+            color: #6a0dad; /* Set link color */
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline; /* Add underline on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>ToDo-List.com</h1>
+        <div>
+            <div>
+                <h1>{{task.title}}</h1>
+                <br>
+                <br>
+                <br>
+                {% if tasks[0]=='': %}
+                <h2>All tasks done.</h2>
+                <a href="{{url_for('delT', task_Id=task.id)}}">Delete this Task</a>
+                {% endif %}
+                {% if tasks[0]!='': %}
+                <form method="post">
+                {% for x in tasks %}
+                    <input type="checkbox" name="checkbox" value="{{x}}">{{x}}
+                    <br>
+                {% endfor %}
+                    <br>
+                    <br>
+                <button type="submit">Submit</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
