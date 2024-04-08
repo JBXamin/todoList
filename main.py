@@ -231,7 +231,7 @@ def newEvent():
         }
 
         service = build('calendar', 'v3', credentials=creds)
-        event = service.events().insert(calendarId="hajitu54@gmail.com", body=event).execute()
+        event = service.events().insert(calendarId="primary", body=event).execute()
         new_event = Events(
             title=form.title.data,
             link=event.get('htmlLink'),
