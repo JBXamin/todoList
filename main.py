@@ -12,6 +12,7 @@ from sqlalchemy import Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from wtforms import StringField, SubmitField, IntegerField
 from wtforms.validators import DataRequired
+from google.oauth2 import credentials as oauth2_credentials
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -231,8 +232,19 @@ def newEvent():
         }
 
         # Retrieve credentials from session
-        credentials = session.get('credentials')
-        if credentials:
+        credentials_dict = session.get('credentials')
+        if credentials_dict:
+            # Reconstruct OAuth2 credentials from the dictionary
+            credentials = oauth2_credentials.Credentials(
+                token=credentials_dict['token'],
+                refresh_token=credentials_dict['refresh_token'],
+                token_uri=credentials_dict['token_uri'],
+                client_id=credentials_dict['client_id'],
+                client_secret=credentials_dict['client_secret'],
+                scopes=credentials_dict['scopes']
+            )
+
+            # Build the Google Calendar service using the credentials
             service = build('calendar', 'v3', credentials=credentials)  # Use stored credentials
             event = service.events().insert(calendarId="primary", body=event).execute()
             new_event = Events(
@@ -247,7 +259,6 @@ def newEvent():
         else:
             return "Authentication credentials not found. Please authenticate first."
     return render_template('make-event.html', form=form)
-
 
 
 @app.route("/show/<int:ids>", methods=["POST", "GET"])
