@@ -199,7 +199,7 @@ def newEvent():
         attendeesL = form.attendees.data.split(", ")
         attendees = []
         for att in attendeesL:
-            attendees += {'email': att}
+            attendees.append({'email': att})  # Append a dictionary to attendees list
         st = datetime.datetime.utcnow()
 
         end = datetime.datetime.utcnow() + datetime.timedelta(hours=int(form.duration.data))
@@ -230,18 +230,24 @@ def newEvent():
             },
         }
 
-        service = build('calendar', 'v3', credentials=creds)
-        event = service.events().insert(calendarId="primary", body=event).execute()
-        new_event = Events(
-            title=form.title.data,
-            link=event.get('htmlLink'),
-            description=form.description.data,
-            date=date.today().strftime("%B %d, %Y")
-        )
-        db.session.add(new_event)
-        db.session.commit()
-        return redirect(url_for("main"))
+        # Retrieve credentials from session
+        credentials = session.get('credentials')
+        if credentials:
+            service = build('calendar', 'v3', credentials=credentials)  # Use stored credentials
+            event = service.events().insert(calendarId="primary", body=event).execute()
+            new_event = Events(
+                title=form.title.data,
+                link=event.get('htmlLink'),
+                description=form.description.data,
+                date=date.today().strftime("%B %d, %Y")
+            )
+            db.session.add(new_event)
+            db.session.commit()
+            return redirect(url_for("main"))
+        else:
+            return "Authentication credentials not found. Please authenticate first."
     return render_template('make-event.html', form=form)
+
 
 
 @app.route("/show/<int:ids>", methods=["POST", "GET"])
