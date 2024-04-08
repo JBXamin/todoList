@@ -9,3 +9,4 @@ SQLAlchemy==2.0.25
 gunicorn==21.2.0
 google-auth-oauthlib==1.2.0
 google-api-python-client==2.125.0
+google==3.0.0
