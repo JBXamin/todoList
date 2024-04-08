@@ -21,6 +21,7 @@ Bootstrap5(app)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 calanderAPIKEY = "AIzaSyD0FwZgXFHpv1kOTr8e8tRek4zWF893SBc"
 creds = None
+autho = False
 app.secret_key = 'jbBrojb'
 CLIENT_SECRETS_FILE = '/etc/secrets/cred'
 app.config.update({
@@ -109,19 +110,24 @@ def login():
         Users = usersDB.scalars().all()
         for x in Users:
             if x.name == request.form.get('name') and x.password == request.form.get('pass'):
-                return redirect(url_for("main"))
+                return redirect(url_for("main", loginID=x.name))
 
         return redirect(url_for("login"))
     return render_template("login.html")
 
 
-@app.route('/main', methods=["POST", "GET"])
-def main():
+name = ""
+
+
+@app.route('/main/<string:loginID>', methods=["POST", "GET"])
+def main(loginID):
+    global name
+    name = loginID
     result = db.session.execute(db.select(Task).order_by(Task.id))
     all_tasks = result.scalars().all()
     result1 = db.session.execute(db.select(Events).order_by(Events.id))
     all_events = result1.scalars().all()
-    return render_template("main.html", all_tasks=all_tasks, all_events=all_events)
+    return render_template("main.html", all_tasks=all_tasks, all_events=all_events, autho=autho)
 
 
 @app.route('/newTask', methods=["POST", "GET"])
@@ -135,7 +141,7 @@ def newTask():
         )
         db.session.add(new_post)
         db.session.commit()
-        return redirect(url_for("main"))
+        return redirect(url_for("main", loginID=name))
     return render_template('make-task.html', form=form)
 
 
@@ -176,9 +182,9 @@ def oauth2callback():
     session['credentials'] = credentials_to_dict(credentials)
 
     # Store credentials in the global variable
-    global creds
+    global creds, autho
     creds = credentials
-
+    autho = True
     return redirect(url_for('newEvent'))
 
 
@@ -255,7 +261,7 @@ def newEvent():
             )
             db.session.add(new_event)
             db.session.commit()
-            return redirect(url_for("main"))
+            return redirect(url_for("main", loginID=name))
         else:
             return "Authentication credentials not found. Please authenticate first."
     return render_template('make-event.html', form=form)
@@ -276,7 +282,7 @@ def showTask(ids):
         taskStr = taskStr[0:(len(taskStr) - 2)]
         requested_title.task = taskStr
         db.session.commit()
-        return redirect(url_for("main"))
+        return redirect(url_for("main", loginID=name))
     requested_title = db.session.execute(db.select(Task).where(Task.id == ids)).scalar()
     taskList = requested_title.task.split(", ")
     return render_template("show-Task.html", task=requested_title, id=ids, tasks=taskList)
@@ -287,7 +293,7 @@ def delT(task_Id):
     deleteTask = db.session.execute(db.select(Task).where(Task.id == task_Id)).scalar()
     db.session.delete(deleteTask)
     db.session.commit()
-    return redirect(url_for("main"))
+    return redirect(url_for("main", loginID=name))
 
 
 @app.route("/deleteEvent/<int:task_Id>")
@@ -295,7 +301,7 @@ def delE(task_Id):
     deleteTask = db.session.execute(db.select(Events).where(Events.id == task_Id)).scalar()
     db.session.delete(deleteTask)
     db.session.commit()
-    return redirect(url_for("main"))
+    return redirect(url_for("main", loginID=name))
 
 
 if __name__ == "__main__":
