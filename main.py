@@ -21,7 +21,7 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 calanderAPIKEY = "AIzaSyD0FwZgXFHpv1kOTr8e8tRek4zWF893SBc"
 creds = None
 app.secret_key = 'jbBrojb'
-CLIENT_SECRETS_FILE = '/credentials.json'
+CLIENT_SECRETS_FILE = '/etc/secrets/cred'
 app.config.update({
     'OAUTH1_PROVIDER_ENFORCE_SSL': False
 })
