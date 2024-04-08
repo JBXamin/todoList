@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% from "bootstrap5/form.html" import render_form %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -64,7 +64,7 @@
     <div class="box">
 
                     <!-- Original HTML form rendering code -->
-                    {% from "Bootstrap5/form.html" import render_form %}
+
                     {{ render_form(form, novalidate=True, button_map={"submit": "primary"}) }}
 
         </div>

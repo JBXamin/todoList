@@ -133,7 +133,7 @@ def newTask():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("main"))
-    return render_template('make-task.html', form=form, x=True)
+    return render_template('make-task.html', form=form)
 
 
 @app.route('/authorize',methods=["POST", "GET"])
@@ -235,7 +235,7 @@ def newEvent():
         db.session.add(new_event)
         db.session.commit()
         return redirect(url_for("main"))
-    return render_template('make-event.html', form=form, x=True)
+    return render_template('make-event.html', form=form)
 
 
 @app.route("/show/<int:ids>", methods=["POST", "GET"])
