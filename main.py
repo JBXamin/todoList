@@ -21,7 +21,7 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 calanderAPIKEY = "AIzaSyD0FwZgXFHpv1kOTr8e8tRek4zWF893SBc"
 creds = None
 app.secret_key = 'jbBrojb'
-CLIENT_SECRETS_FILE = 'https://raw.githubusercontent.com/JBXamin/todoList/blob/9f3bc5016ac6a9db0d781058a01d47132784f587/credentials.json'
+CLIENT_SECRETS_FILE = '/credentials.json'
 app.config.update({
     'OAUTH1_PROVIDER_ENFORCE_SSL': False
 })
