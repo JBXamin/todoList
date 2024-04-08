@@ -136,7 +136,7 @@ def newTask():
     return render_template('make-task.html', form=form, x=True)
 
 
-@app.route('/authorize')
+@app.route('/authorize',methods=["POST", "GET"])
 def authorize():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES,
@@ -151,7 +151,7 @@ def authorize():
     return redirect(authorization_url)
 
 
-@app.route('/oauth2callback')
+@app.route('/oauth2callback', methods=["POST", "GET"])
 def oauth2callback():
     # Specify the state when creating the flow in the callback.
     state = session.pop('state', None)
