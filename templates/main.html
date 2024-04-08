@@ -66,20 +66,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
-                    {% if autho: %}
-                    <li class="nav-item">
-                        <!-- Add Authorization Button -->
-                        <a class="nav-link" href="{{url_for('authorize')}}">Authorize</a>
-                    </li>
-                    {% endif %}
-                    {% if not autho: %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('newTask')}}">Add Task</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('newEvent')}}">Add Event</a>
+                        <a class="nav-link" href="{{url_for('authorize')}}">Add Event</a>
                     </li>
-                    {% endif %}
                 </ul>
             </div>
         </div>
