@@ -174,6 +174,10 @@ def oauth2callback():
     credentials = flow.credentials
     session['credentials'] = credentials_to_dict(credentials)
 
+    # Store credentials in the global variable
+    global creds
+    creds = credentials
+
     return redirect(url_for('newEvent'))
 
 
