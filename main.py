@@ -142,7 +142,7 @@ def newTask():
 def authorize():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES,
-        redirect_uri=url_for('oauth2callback', _external=True, _scheme='http')  # Use HTTP scheme
+        redirect_uri=url_for('oauth2callback', _external=True, _scheme='https')  # Use HTTP scheme
     )
     authorization_url, state = flow.authorization_url(
         access_type='offline',
@@ -163,7 +163,7 @@ def oauth2callback():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES,
         state=state,
-        redirect_uri=url_for('oauth2callback', _external=True, _scheme='http')
+        redirect_uri=url_for('oauth2callback', _external=True, _scheme='https')
     )
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
