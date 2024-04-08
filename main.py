@@ -21,12 +21,14 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 calanderAPIKEY = "AIzaSyD0FwZgXFHpv1kOTr8e8tRek4zWF893SBc"
 creds = None
 app.secret_key = 'jbBrojb'
-CLIENT_SECRETS_FILE = 'JBXamin/todoList/blob/master/credentials.json'
+CLIENT_SECRETS_FILE = 'https://raw.githubusercontent.com/JBXamin/todoList/blob/master/credentials.json'
 app.config.update({
     'OAUTH1_PROVIDER_ENFORCE_SSL': False
 })
 
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -106,14 +108,14 @@ def login():
         Users = usersDB.scalars().all()
         for x in Users:
             if x.name == request.form.get('name') and x.password == request.form.get('pass'):
-                return redirect(url_for("main", loginID=x.name))
+                return redirect(url_for("main"))
 
         return redirect(url_for("login"))
     return render_template("login.html")
 
 
-@app.route('/main/<string:loginID>', methods=["POST", "GET"])
-def main(loginID):
+@app.route('/main', methods=["POST", "GET"])
+def main():
     result = db.session.execute(db.select(Task).order_by(Task.id))
     all_tasks = result.scalars().all()
     result1 = db.session.execute(db.select(Events).order_by(Events.id))
@@ -136,7 +138,7 @@ def newTask():
     return render_template('make-task.html', form=form)
 
 
-@app.route('/authorize',methods=["POST", "GET"])
+@app.route('/authorize', methods=["POST", "GET"])
 def authorize():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES,
