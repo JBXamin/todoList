@@ -106,14 +106,14 @@ def login():
         Users = usersDB.scalars().all()
         for x in Users:
             if x.name == request.form.get('name') and x.password == request.form.get('pass'):
-                return redirect(url_for("main"))
+                return redirect(url_for("main", loginID=x.name))
 
         return redirect(url_for("login"))
     return render_template("login.html")
 
 
-@app.route('/main', methods=["POST", "GET"])
-def main():
+@app.route('/main/<string:loginID>', methods=["POST", "GET"])
+def main(loginID):
     result = db.session.execute(db.select(Task).order_by(Task.id))
     all_tasks = result.scalars().all()
     result1 = db.session.execute(db.select(Events).order_by(Events.id))
