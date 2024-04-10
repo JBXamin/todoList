@@ -10,7 +10,7 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from wtforms import StringField, SubmitField, IntegerField
+from wtforms import StringField, SubmitField, IntegerField, DateTimeField
 from wtforms.validators import DataRequired
 from google.oauth2 import credentials as oauth2_credentials
 
@@ -76,6 +76,7 @@ class CreatePostForm(FlaskForm):
 class Event(FlaskForm):
     title = StringField("Title", validators=[DataRequired()], render_kw={"placeholder": "Title"})
     description = StringField("Description", render_kw={"placeholder": "Description (if any)"})
+    date_time = DateTimeField('Date and Time', format='%Y-%m-%d %H:%M:00', render_kw={"placeholder": "Year-Month-Day Hour:Minute"}, validators=[DataRequired()])
     duration = IntegerField("Duration", validators=[DataRequired()], render_kw={"placeholder": "Length of the event"})
     count = IntegerField("Number of meetings", validators=[DataRequired()])
     attendees = StringField("Attendees", validators=[DataRequired()],
@@ -207,9 +208,9 @@ def newEvent():
         attendees = []
         for att in attendeesL:
             attendees.append({'email': att})  # Append a dictionary to attendees list
-        st = datetime.datetime.utcnow()
+        st = form.date_time.data + ":00"
 
-        end = datetime.datetime.utcnow() + datetime.timedelta(hours=int(form.duration.data))
+        end = form.date_time.data + ":00" + datetime.timedelta(hours=int(form.duration.data))
         start_formatted = st.isoformat() + 'Z'
         end_formatted = end.isoformat() + 'Z'
 
