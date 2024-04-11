@@ -19,12 +19,12 @@
             background-position: center;
         }
         .box {
-            width: 280px;
-            height: 580px;
+            width: 290px;
             background-color: rgba(255, 255, 255, 0); /* Set background color with some transparency */
             border-radius: 10px;
             padding: 40px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: Translate(10px,-70px);
         }
         h1, h2 {
             text-align: center;
@@ -84,11 +84,42 @@
             <input type="password" id="pass" name="pass" required><br>
             <label for="confirmpass">Confirm Password:</label><br>
             <input type="password" id="confirmpass" name="confirmpass" required><br>
+            <span id="username-error" style="color: red;"></span><br>
+            <span id="password-match-error" style="color: red;"></span><br>
             <button type="submit">Submit</button>
         </form>
         <div class="login">
             <p>Already have an account? Log In <a href="{{url_for('login')}}">here!!</a></p>
         </div>
     </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#name').on('blur', function() {
+                var username = $(this).val();
+                $.ajax({
+                    url: '/check_username',
+                    type: 'POST',
+                    data: { username: username },
+                    success: function(response) {
+                        if (response.exists) {
+                            $('#username-error').text('Username already taken');
+                        } else {
+                            $('#username-error').text('');
+                        }
+                    }
+                });
+            });
+            $('#confirmpass').on('blur', function() {
+                var password = $('#pass').val();
+                var confirmPassword = $(this).val();
+                if (password !== confirmPassword) {
+                    $('#password-match-error').text('Passwords do not match');
+                } else {
+                    $('#password-match-error').text('');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

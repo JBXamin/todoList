@@ -2,14 +2,15 @@ import datetime
 import os
 from datetime import date
 
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from wtforms import StringField, SubmitField, IntegerField, DateTimeField
 from wtforms.validators import DataRequired
 from google.oauth2 import credentials as oauth2_credentials
@@ -27,7 +28,8 @@ CLIENT_SECRETS_FILE = '/etc/secrets/cred'
 app.config.update({
     'OAUTH1_PROVIDER_ENFORCE_SSL': False
 })
-
+login_manager = LoginManager()
+login_manager.init_app(app)
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
@@ -42,25 +44,41 @@ db.init_app(app)
 
 
 class Task(db.Model):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String(250), nullable=False)
-    task: Mapped[str] = mapped_column(String(250), nullable=False)
-    date: Mapped[str] = mapped_column(String(250), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(250), nullable=False)
+    task = db.Column(db.String(250), nullable=False)
+    date = db.Column(db.String(250), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship("User", back_populates="tasks")
 
 
 class Events(db.Model):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String(250), nullable=False)
-    link: Mapped[str] = mapped_column(String(250), nullable=False)
-    description: Mapped[str] = mapped_column(String(250), nullable=False)
-    date: Mapped[str] = mapped_column(String(250), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(250), nullable=False)
+    link = db.Column(db.String(250), nullable=False)
+    description = db.Column(db.String(250), nullable=False)
+    date = db.Column(db.String(250), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship("User", back_populates="events")
 
 
-class User(db.Model):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(250), nullable=False)
-    password: Mapped[str] = mapped_column(String(250), nullable=False)
-    confirmPass: Mapped[str] = mapped_column(String(250), nullable=False)
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    confirmPass = db.Column(db.String(250), nullable=False)
+    tasks = db.relationship("Task", back_populates="user")
+    events = db.relationship("Events", back_populates="user")
+
+    def check_password(self, password):
+        # Implement password verification logic here
+        # For example, you can use a secure password hashing library like bcrypt
+        return self.password == password
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 with app.app_context():
@@ -76,12 +94,23 @@ class CreatePostForm(FlaskForm):
 class Event(FlaskForm):
     title = StringField("Title", validators=[DataRequired()], render_kw={"placeholder": "Title"})
     description = StringField("Description", render_kw={"placeholder": "Description (if any)"})
-    date_time = DateTimeField('Date and Time', format='%Y-%m-%d %H:%M:%S', render_kw={"placeholder": "Year-Month-Day Hour:Min:Sec"}, validators=[DataRequired()])
+    date_time = DateTimeField('Date and Time', format='%Y-%m-%d %H:%M:%S',
+                              render_kw={"placeholder": "Year-Month-Day Hour:Min:Sec"}, validators=[DataRequired()])
     duration = IntegerField("Duration", validators=[DataRequired()], render_kw={"placeholder": "Length of the event"})
     count = IntegerField("Number of meetings", validators=[DataRequired()])
     attendees = StringField("Attendees", validators=[DataRequired()],
                             render_kw={"placeholder": "Email's of attendees separated with ', '"})
     submit = SubmitField("Submit Task")
+
+
+@app.route('/check_username', methods=['POST'])
+def check_username():
+    username = request.form.get('username')
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return jsonify({'exists': True})
+    else:
+        return jsonify({'exists': False})
 
 
 @app.route("/")
@@ -92,14 +121,20 @@ def mainPage():
 @app.route("/register", methods=["POST", "GET"])
 def start():
     if request.method == "POST":
-        registeredUser = User(
-            name=request.form.get('name'),
-            password=request.form.get('pass'),
-            confirmPass=request.form.get('confirmpass'),
-        )
-        db.session.add(registeredUser)
-        db.session.commit()
-        return redirect(url_for("login"))
+        username = request.form.get('username')
+        user = User.query.filter_by(username=username).first()
+        if user:
+            flash('Username already taken', 'error')
+            return redirect(url_for("start"))
+        else:
+            registeredUser = User(
+                username=request.form.get('name'),
+                password=request.form.get('pass'),
+                confirmPass=request.form.get('confirmpass'),
+            )
+            db.session.add(registeredUser)
+            db.session.commit()
+            return redirect(url_for("login"))
     return render_template("start.html")
 
 
@@ -107,28 +142,32 @@ def start():
 def login():
     global creds
     if request.method == "POST":
-        usersDB = db.session.execute(db.select(User).order_by(User.id))
-        Users = usersDB.scalars().all()
-        for x in Users:
-            if x.name == request.form.get('name') and x.password == request.form.get('pass'):
-                return redirect(url_for("main", loginID=x.name))
-
-        return redirect(url_for("login"))
+        username = request.form.get('name')
+        password = request.form.get('pass')
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for("main", loginID=username))
+        else:
+            flash('Incorrect username or password', 'error')  # Flash an error message
+            return render_template("login.html")  # Render login page again with error message
     return render_template("login.html")
 
 
-name = ""
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 
-@app.route('/main/<string:loginID>', methods=["POST", "GET"])
-def main(loginID):
-    global name
-    name = loginID
-    result = db.session.execute(db.select(Task).order_by(Task.id))
-    all_tasks = result.scalars().all()
-    result1 = db.session.execute(db.select(Events).order_by(Events.id))
-    all_events = result1.scalars().all()
-    return render_template("main.html", all_tasks=all_tasks, all_events=all_events, autho=autho)
+@app.route('/main', methods=["GET"])
+@login_required
+def main():
+    user_id = current_user.id
+    all_tasks = Task.query.filter_by(user_id=user_id).all()
+    all_events = Events.query.filter_by(user_id=user_id).all()
+    return render_template("main.html", all_tasks=all_tasks, all_events=all_events)
 
 
 @app.route('/newTask', methods=["POST", "GET"])
@@ -138,11 +177,12 @@ def newTask():
         new_post = Task(
             title=form.title.data,
             task=form.task.data,
-            date=date.today().strftime("%B %d, %Y")
+            date=date.today().strftime("%B %d, %Y"),
+            user_id=current_user.id  # Assuming you have a current_user object representing the logged-in user
         )
         db.session.add(new_post)
         db.session.commit()
-        return redirect(url_for("main", loginID=name))
+        return redirect(url_for("main"))
     return render_template('make-task.html', form=form)
 
 
@@ -181,8 +221,6 @@ def oauth2callback():
     # Store credentials in the session.
     credentials = flow.credentials
     session['credentials'] = credentials_to_dict(credentials)
-
-    # Store credentials in the global variable
     global creds, autho
     creds = credentials
     autho = True
@@ -237,8 +275,6 @@ def newEvent():
                 ],
             },
         }
-
-        # Retrieve credentials from session
         credentials_dict = session.get('credentials')
         if credentials_dict:
             # Reconstruct OAuth2 credentials from the dictionary
@@ -251,18 +287,18 @@ def newEvent():
                 scopes=credentials_dict['scopes']
             )
 
-            # Build the Google Calendar service using the credentials
             service = build('calendar', 'v3', credentials=credentials)  # Use stored credentials
             event = service.events().insert(calendarId="primary", body=event).execute()
             new_event = Events(
                 title=form.title.data,
                 link=event.get('htmlLink'),
                 description=form.description.data,
-                date=date.today().strftime("%B %d, %Y")
+                date=date.today().strftime("%B %d, %Y"),
+                user_id=current_user.id
             )
             db.session.add(new_event)
             db.session.commit()
-            return redirect(url_for("main", loginID=name))
+            return redirect(url_for("main"))
         else:
             return "Authentication credentials not found. Please authenticate first."
     return render_template('make-event.html', form=form)
@@ -283,7 +319,7 @@ def showTask(ids):
         taskStr = taskStr[0:(len(taskStr) - 2)]
         requested_title.task = taskStr
         db.session.commit()
-        return redirect(url_for("main", loginID=name))
+        return redirect(url_for("main"))
     requested_title = db.session.execute(db.select(Task).where(Task.id == ids)).scalar()
     taskList = requested_title.task.split(", ")
     return render_template("show-Task.html", task=requested_title, id=ids, tasks=taskList)
@@ -294,7 +330,7 @@ def delT(task_Id):
     deleteTask = db.session.execute(db.select(Task).where(Task.id == task_Id)).scalar()
     db.session.delete(deleteTask)
     db.session.commit()
-    return redirect(url_for("main", loginID=name))
+    return redirect(url_for("main"))
 
 
 @app.route("/deleteEvent/<int:task_Id>")
@@ -302,7 +338,7 @@ def delE(task_Id):
     deleteTask = db.session.execute(db.select(Events).where(Events.id == task_Id)).scalar()
     db.session.delete(deleteTask)
     db.session.commit()
-    return redirect(url_for("main", loginID=name))
+    return redirect(url_for("main"))
 
 
 if __name__ == "__main__":

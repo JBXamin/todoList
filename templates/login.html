@@ -19,12 +19,12 @@
             background-position: center;
         }
         .box {
-            width: 280px;
-            height: 580px;
+            width: 290px;
             background-color: rgba(255, 255, 255, 0); /* Set background color with some transparency */
             border-radius: 10px;
             padding: 40px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: Translate(10px,-70px);
         }
         h1, h2 {
             text-align: center;
@@ -85,6 +85,17 @@
             <button type="submit">Submit</button>
         </form>
         <div class="login">
+            <!-- Display error message if it exists -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="error">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <!-- End of error message -->
             <p>Don't have an account? Register <a href="{{url_for('start')}}">here!!</a></p>
         </div>
     </div>
